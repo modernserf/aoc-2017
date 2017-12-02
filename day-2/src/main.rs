@@ -1,18 +1,21 @@
 use std::fs::File;
 use std::io::Read;
+use std::cmp;
 
 fn main() {
     let tsv = get_file_contents();
     let data = parse_tsv(tsv);
 
-    let mut sum = 0;
-    let mut div_sum = 0;
-    for row in data {
-        sum += row_checksum(&row);
-        div_sum += divisible_row_checksum(&row);
-    }
+    let sum = data.iter()
+        .map(|row| row_checksum(row))
+        .sum::<u32>();
 
     println!("part 1: {}", sum);
+
+    let div_sum = data.iter()
+        .map(|row| divisible_row_checksum(row))
+        .sum::<u32>();
+
     println!("part 2: {}", div_sum);
 }
 
@@ -28,29 +31,18 @@ fn get_file_contents() -> String {
 }
 
 fn parse_tsv(tsv: String) -> Vec<Vec<u32>> {
-    let mut data = Vec::new();
-    let rows = tsv.split("\n");
-
-    for row in rows {
-        let mut row_data = Vec::new();
-        let cols = row.split("\t");
-
-        for col in cols {
-            if let Ok(val) = col.parse::<u32>() {
-                row_data.push(val);
-            }
-        }
-
-        if row_data.len() > 0 {
-            data.push(row_data);
-        }
-    }
-
-    data
+    tsv.split("\n")
+        .map(|row| {
+            row.split("\t")
+                .filter_map(|s| s.parse::<u32>().ok())
+                .collect::<Vec<u32>>()
+        })
+        .filter(|row| { row.len() > 0 })
+        .collect()
 }
 
 fn row_checksum(xs: &[u32]) -> u32 {
-    let (min, max) = minmax(xs);
+    let (min, max) = min_max(xs);
     max - min
 }
 
@@ -68,16 +60,12 @@ fn divisible_row_checksum(xs: &[u32]) -> u32 {
     panic!("Couldn't find divisible items in row")
 }
 
-fn minmax<T: PartialOrd + Copy>(xs: &[T]) -> (T, T) {
-    let mut min = xs[0];
-    let mut max = xs[0];
-
-    for x in xs {
-        if *x > max { max = *x; }
-        if *x < min { min = *x; }
-    }
-
-    (min, max)
+fn min_max<T: Ord + Copy>(xs: &[T]) -> (T, T) {
+    xs.iter().fold(
+        (xs[0], xs[0]),
+        |(min_val, max_val), x| {
+            (cmp::min(*x, min_val), cmp::max(*x, max_val))
+        })
 }
 
 fn order<T: PartialOrd> (a: T, b: T) -> (T, T) {

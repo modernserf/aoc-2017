@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 
+
 fn main() {
     let contents = get_file_contents();
     let digits = string_to_numbers(contents);
@@ -13,6 +14,7 @@ fn main() {
     println!("part 2: {}", sum);
 }
 
+
 fn get_file_contents() -> String {
     let mut file = File::open("./src/input.txt")
         .expect("could not open file");
@@ -23,46 +25,34 @@ fn get_file_contents() -> String {
     contents
 }
 
+
 fn string_to_numbers(s: String) -> Vec<u32> {
-    let mut vec = Vec::new();
-
-    for ch in s.split("") {
-        if let Ok(num) = ch.parse::<u32>() {
-            vec.push(num);
-        }
-    }
-
-    vec
+    s.split("")
+        .filter_map(|s| s.parse::<u32>().ok())
+        .collect()
 }
+
 
 fn match_value<T: PartialEq> (l: T, r: T) -> Option<T> {
-    if l == r {
-        Some(l)
-    } else {
-        None
-    }
+    if l == r { Some(l) } else { None }
 }
 
 
-fn sum_at_offset (vec: &[u32], offset: usize) -> u32 {
-    let mut sum = 0;
-    let ln = vec.len();
+fn sum_at_offset (xs: &[u32], offset: usize) -> u32 {
+    let ln = xs.len();
 
-    for i in 0..ln {
-        let l = vec[i];
-        let r = vec[(i + offset) % ln];
-        if let Some(val) = match_value(l, r) {
-            sum = sum + val
-        }
-    }
-
-    sum
+    xs.iter().enumerate().fold(0, |sum, (i, x)| {
+        let y = &xs[(i + offset) % ln];
+        match_value(x, y)
+            .map_or(sum, |val| sum + val)
+    })
 }
 
 
 fn sum_matching_neighbors (vec: &[u32]) -> u32 {
     sum_at_offset(vec, 1)
 }
+
 
 fn sum_matching_opposites (vec: &[u32]) -> u32 {
     let offset = vec.len() / 2;
