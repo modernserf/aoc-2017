@@ -49,12 +49,12 @@ fn parse_tsv(tsv: String) -> Vec<Vec<u32>> {
     data
 }
 
-fn row_checksum(xs: &Vec<u32>) -> u32 {
+fn row_checksum(xs: &[u32]) -> u32 {
     let (min, max) = minmax(xs);
     max - min
 }
 
-fn divisible_row_checksum(xs: &Vec<u32>) -> u32 {
+fn divisible_row_checksum(xs: &[u32]) -> u32 {
     for (i, x) in xs.iter().enumerate() {
         let ys = &xs[(i+1)..];
         for y in ys {
