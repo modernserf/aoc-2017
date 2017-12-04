@@ -1,8 +1,7 @@
 use std::fs::File;
 use std::io::Read;
-use std::collections::HashMap;
 use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
+use std::hash::{Hash};
 
 
 fn main() {
@@ -11,7 +10,7 @@ fn main() {
     let valid_passphrases = count_matches(&contents, |word| String::from(word));
     println!("part 1: {}", valid_passphrases);
 
-    let valid_passphrases = count_matches(&contents, |word| Anagram::from(word));
+    let valid_passphrases = count_matches(&contents, |word| sorted_chars(word));
     println!("part 2: {}", valid_passphrases);
 }
 
@@ -52,37 +51,9 @@ fn count_matches<H: Hash + Eq>(contents: &str, hasher: fn(&str) -> H) -> u32 {
 }
 
 
-#[derive(Eq)]
-struct Anagram {
-    data: HashMap<String, u32>
-}
+fn sorted_chars(s: &str) -> Vec<char> {
+    let mut data = String::from(s).chars().collect::<Vec<char>>();
+    data.sort();
 
-impl Anagram {
-    fn from(s: &str) -> Anagram {
-        let mut bag = HashMap::new();
-
-        for ch in s.split("") {
-            let ch_reified = String::from(ch);
-            let count = bag.entry(ch_reified).or_insert(0);
-            *count += 1;
-        }
-
-        Anagram { data: bag }
-    }
-}
-
-impl PartialEq for Anagram {
-    fn eq(&self, other: &Anagram) -> bool {
-        self.data == other.data
-    }
-}
-
-impl Hash for Anagram {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        let mut list = self.data.iter()
-            .collect::<Vec<(&String, &u32)>>();
-
-        list.sort_by_key(|&(k, _)| k);
-        list.hash(state);
-    }
+    data
 }
