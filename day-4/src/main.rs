@@ -1,28 +1,15 @@
-use std::fs::File;
-use std::io::Read;
 use std::collections::HashSet;
 use std::hash::{Hash};
 
 
 fn main() {
-    let contents = get_file_contents();
+    let contents = include_str!("input.txt");
 
-    let valid_passphrases = count_matches(&contents, |word| String::from(word));
+    let valid_passphrases = count_matches(contents, |word| String::from(word));
     println!("part 1: {}", valid_passphrases);
 
-    let valid_passphrases = count_matches(&contents, |word| sorted_chars(word));
+    let valid_passphrases = count_matches(contents, |word| sorted_chars(word));
     println!("part 2: {}", valid_passphrases);
-}
-
-
-fn get_file_contents() -> String {
-    let mut file = File::open("./src/input.txt")
-        .expect("could not open file");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .expect("could not read file as string");
-
-    contents
 }
 
 

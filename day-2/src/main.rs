@@ -1,9 +1,7 @@
-use std::fs::File;
-use std::io::Read;
 use std::cmp;
 
 fn main() {
-    let tsv = get_file_contents();
+    let tsv = include_str!("input.txt");
     let data = parse_tsv(tsv);
 
     let sum = data.iter()
@@ -20,17 +18,7 @@ fn main() {
 }
 
 
-fn get_file_contents() -> String {
-    let mut file = File::open("./src/input.txt")
-        .expect("could not open file");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .expect("could not read file as string");
-
-    contents
-}
-
-fn parse_tsv(tsv: String) -> Vec<Vec<u32>> {
+fn parse_tsv(tsv: &str) -> Vec<Vec<u32>> {
     tsv.split("\n")
         .map(|row| {
             row.split("\t")
@@ -41,10 +29,12 @@ fn parse_tsv(tsv: String) -> Vec<Vec<u32>> {
         .collect()
 }
 
+
 fn row_checksum(xs: &[u32]) -> u32 {
     let (min, max) = min_max(xs);
     max - min
 }
+
 
 fn divisible_row_checksum(xs: &[u32]) -> u32 {
     for (i, x) in xs.iter().enumerate() {
@@ -60,6 +50,7 @@ fn divisible_row_checksum(xs: &[u32]) -> u32 {
     panic!("Couldn't find divisible items in row")
 }
 
+
 fn min_max<T: Ord + Copy>(xs: &[T]) -> (T, T) {
     xs.iter().fold(
         (xs[0], xs[0]),
@@ -67,6 +58,7 @@ fn min_max<T: Ord + Copy>(xs: &[T]) -> (T, T) {
             (cmp::min(*x, min_val), cmp::max(*x, max_val))
         })
 }
+
 
 fn order<T: PartialOrd> (a: T, b: T) -> (T, T) {
     if a < b { (a, b) } else { (b, a) }

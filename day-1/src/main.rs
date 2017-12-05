@@ -1,9 +1,5 @@
-use std::fs::File;
-use std::io::Read;
-
-
 fn main() {
-    let contents = get_file_contents();
+    let contents = include_str!("input.txt");
     let digits = string_to_numbers(contents);
     // part 1
     let sum = sum_matching_neighbors(&digits);
@@ -15,18 +11,7 @@ fn main() {
 }
 
 
-fn get_file_contents() -> String {
-    let mut file = File::open("./src/input.txt")
-        .expect("could not open file");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .expect("could not read file as string");
-
-    contents
-}
-
-
-fn string_to_numbers(s: String) -> Vec<u32> {
+fn string_to_numbers(s: &str) -> Vec<u32> {
     s.split("")
         .filter_map(|s| s.parse::<u32>().ok())
         .collect()
