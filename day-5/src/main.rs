@@ -31,10 +31,8 @@ fn read_into_buffer(s: &str) -> Vec<i32> {
 
 fn traverse_buffer(buf: &mut Vec<i32>) -> u32 {
     let mut ptr: i32 = 0;
-    for i in 0..10_000_000 {
-        if ptr < 0 {
-            return i;
-        } else if let Some(val) = buf.get_mut(ptr as usize) {
+    for i in 0..1_000_000_000 {
+        if let Some(val) = buf.get_mut(ptr as usize) {
             ptr += *val;
             *val += 1;
         } else {
@@ -42,15 +40,13 @@ fn traverse_buffer(buf: &mut Vec<i32>) -> u32 {
         }
     }
 
-    panic!("could not complete in 10m iterations")
+    panic!("could not complete in 1b iterations")
 }
 
-fn traverse_buffer_decreasing(buf: &mut Vec<i32>) -> u64 {
+fn traverse_buffer_decreasing(buf: &mut Vec<i32>) -> u32 {
     let mut ptr: i32 = 0;
-    for i in 0..10_000_000_000 {
-        if ptr < 0 {
-            return i;
-        } else if let Some(val) = buf.get_mut(ptr as usize) {
+    for i in 0..1_000_000_000 {
+        if let Some(val) = buf.get_mut(ptr as usize) {
             let offset = if *val >= 3 { -1 } else { 1 };
             ptr += *val;
             *val += offset;
@@ -59,5 +55,5 @@ fn traverse_buffer_decreasing(buf: &mut Vec<i32>) -> u64 {
         }
     }
 
-    panic!("could not complete in 10b iterations")
+    panic!("could not complete in 1b iterations")
 }
