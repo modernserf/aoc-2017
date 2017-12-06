@@ -12,34 +12,36 @@ fn main() {
 }
 
 
-fn find_redistribution_count(buf: &[usize]) -> (usize, Vec<usize>) {
+fn find_redistribution_count(buf: &[u8]) -> (usize, Vec<u8>) {
     let mut seen_inputs = HashSet::new();
     let mut r = buf.to_vec();
-    let ln = buf.len();
 
-    for iters in 1..10_000_000 {
+    loop {
         seen_inputs.insert(r.clone());
-
-        let (offset, max) = find_max_index_value(&r);
-
-        r[offset] = 0;
-
-        for j in 1..(max + 1) {
-            r[(offset + j) % ln] += 1;
-        }
+        redistribute(&mut r);
 
         if seen_inputs.contains(&r) {
-            return (iters, r.to_vec());
+            return (seen_inputs.len(), r.to_vec());
         }
     }
-
-    panic!("no duplicates seen");
 }
 
 
-fn find_max_index_value(r: &[usize]) -> (usize, usize) {
+fn find_max_index_value(r: &[u8]) -> (usize, u8) {
     r.iter().enumerate()
         .fold((0, r[0]), |(max_i, max_val), (i, val)| {
             if *val > max_val { (i, *val) } else { (max_i, max_val) }
         })
+}
+
+
+fn redistribute(r: &mut [u8]) {
+    let ln = r.len();
+    let (offset, max) = find_max_index_value(&r);
+
+    r[offset] = 0;
+
+    for j in 1..(max as usize + 1) {
+        r[(offset + j) % ln] += 1;
+    }
 }
