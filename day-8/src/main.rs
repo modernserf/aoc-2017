@@ -10,34 +10,33 @@ fn main() {
 
     for line in contents.lines() {
         if line.len() > 0 {
-            println!("line {}", line);
             let instr = parse_line(line);
             memory.run(&instr);
         }
     }
 
     let largest_value = memory.largest_value();
-    println!("{}", largest_value);
+    println!("part 1: {}", largest_value);
+
+    println!("part 2: {}", memory.max_value);
 }
 
 
 #[derive(Debug)]
 struct Memory {
-    data: HashMap<String, i32>
+    data: HashMap<String, i32>,
+    max_value: i32
 }
 
 impl Memory {
     fn new() -> Memory {
-        Memory { data: HashMap::new() }
+        Memory { data: HashMap::new(), max_value: 0 }
     }
     fn run(&mut self, instr: &Instruction) {
         let source_value = self.get(&instr.source);
-        if comp(&instr.operator, source_value, instr.condition_value) {
-            if let Some(h) = self.data.get_mut(&instr.target) {
-                *h += instr.offset();
-                return
-            }
-            self.data.insert(instr.target.to_string(), instr.offset());
+        if instr.operator.comp(source_value, instr.condition_value) {
+            let next_value = self.get(&instr.target) + instr.offset();
+            self.insert(&instr.target, next_value);
         }
     }
     fn get(&self, id: &str) -> i32 {
@@ -46,37 +45,62 @@ impl Memory {
     fn largest_value(&self) -> i32 {
         *self.data.values().max().unwrap()
     }
-}
-
-
-fn comp(op: &Op, l: i32, r: i32) -> bool {
-    match op {
-        &Op::Gt => { l > r },
-        &Op::Gte => { l >= r },
-        &Op::Eq => { l == r },
-        &Op::Neq => { l != r },
-        &Op::Lte => { l <= r },
-        &Op::Lt => { l < r },
+    fn insert(&mut self, id: &str, value: i32) {
+        self.data.insert(id.to_string(), value);
+        if value > self.max_value {
+            self.max_value = value;
+        }
     }
 }
 
 
 #[derive(Debug)]
-#[derive(PartialEq)]
-enum Direction {
-    Inc,
-    Dec,
-}
+enum Direction { Inc, Dec }
+
+impl Direction {
+    fn from_string(s: &str) -> Option<Direction> {
+        match s {
+            "inc" => Some(Direction::Inc),
+            "dec" => Some(Direction::Dec),
+            _ => None,
+        }
+    }
+    fn offset(&self, val: i32) -> i32 {
+        match self {
+            &Direction::Inc => val,
+            &Direction::Dec => -val,
+        }
+    }
+ }
+
 
 #[derive(Debug)]
-enum Op {
-    Gt,
-    Gte,
-    Eq,
-    Neq,
-    Lte,
-    Lt,
+enum Op { Gt, Gte, Eq, Neq, Lte, Lt }
+
+impl Op {
+    fn from_string(s: &str) -> Option<Op> {
+        match s {
+            ">"  => Some(Op::Gt),
+            ">=" => Some(Op::Gte),
+            "==" => Some(Op::Eq),
+            "!=" => Some(Op::Neq),
+            "<=" => Some(Op::Lte),
+            "<"  => Some(Op::Lt),
+            _ => None
+        }
+    }
+    fn comp(&self, l: i32, r: i32) -> bool {
+        match self {
+            &Op::Gt => { l > r },
+            &Op::Gte => { l >= r },
+            &Op::Eq => { l == r },
+            &Op::Neq => { l != r },
+            &Op::Lte => { l <= r },
+            &Op::Lt => { l < r },
+        }
+    }
 }
+
 
 #[derive(Debug)]
 struct Instruction {
@@ -90,11 +114,7 @@ struct Instruction {
 
 impl Instruction {
     fn offset(&self) -> i32 {
-        if self.direction == Direction::Inc {
-            self.value
-        } else {
-            -self.value
-        }
+        self.direction.offset(self.value)
     }
 }
 
@@ -106,37 +126,13 @@ fn parse_line(s: &str) -> Instruction {
 
     RE.captures_iter(s)
         .map(|cap| {
-            let target = String::from(&cap[1]);
-
-            let direction = if &cap[2] == "inc" {
-                Direction::Inc
-            } else {
-                Direction::Dec
-            };
-
-            let value = cap[3].parse::<i32>().expect("source value");
-
-            let source = String::from(&cap[4]);
-
-            let operator = match &cap[5] {
-                ">"  => Op::Gt,
-                ">=" => Op::Gte,
-                "==" => Op::Eq,
-                "!=" => Op::Neq,
-                "<=" => Op::Lte,
-                "<"  => Op::Lt,
-                _ => { panic!("unknown pattern"); },
-            };
-
-            let condition_value = cap[6].parse::<i32>().expect("condition value");
-
             Instruction {
-                target,
-                direction,
-                value,
-                source,
-                operator,
-                condition_value,
+                target: String::from(&cap[1]),
+                direction: Direction::from_string(&cap[2]).unwrap(),
+                value: cap[3].parse::<i32>().expect("source value"),
+                source: String::from(&cap[4]),
+                operator: Op::from_string(&cap[5]).unwrap(),
+                condition_value: cap[6].parse::<i32>().expect("condition value"),
             }
         })
         .nth(0).unwrap()
