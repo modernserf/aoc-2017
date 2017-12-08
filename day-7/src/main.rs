@@ -1,20 +1,20 @@
-#[macro_use] extern crate lazy_static;
-extern crate regex;
-use regex::Regex;
+#[macro_use] extern crate nom;
+use nom::{alpha, digit, space};
+
 use std::collections::HashSet;
 use std::collections::HashMap;
 
 fn main() {
     let contents = include_str!("input.txt");
 
-    let mut tree = NodeTree::new();
-
-    for line in contents.lines() {
-        if line.len() > 0 {
-            let (name, weight, children) = parse_line(line);
-            tree.insert(name, weight, children);
-        }
-    }
+    let tree = contents.lines()
+        .fold(NodeTree::new(), |mut t, line| {
+            if line.len() > 0 {
+                let (name, weight, children) = parse_line(line);
+                t.insert(name, weight, children);
+            }
+            t
+        });
 
     let root = &tree.roots()[0];
     println!("part 1: {:?}", root);
@@ -113,36 +113,37 @@ fn wrong_value(xs: &[u32]) -> Option<(usize, u32)> {
 
 
 fn parse_line(line: &str) -> (String, u32, Vec<String>) {
-    if line.contains("->") {
-        let split = line.split(" -> ").collect::<Vec<_>>();
-        let head = split[0];
-        let tail = split[1];
-        let (name, weight) = parse_head(head);
-        let children = parse_tail(tail);
+    let bytes: Vec<u8> = line.bytes().collect();
 
-        (name, weight, children)
-    }  else {
-        let (name, weight) = parse_head(line);
-        (name, weight, vec![])
-    }
+    let (_, (name, weight, children)) = expr(&bytes).unwrap();
+    (name, weight, children)
 }
 
-fn parse_head(s: &str) -> (String, u32) {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(\w+) \((\d+)\)").unwrap();
-    }
+named!(expr<(String, u32, Vec<String>)>,
+    alt_complete!(
+        do_parse!(
+            h:head >> space >> tag!("->") >> space >> t:tail >>
+            (h.0, h.1, t)) |
+        do_parse!(
+            h:head >>
+            (h.0, h.1, { Vec::new() })
+        )));
 
-    RE.captures_iter(s)
-        .map(|cap| {
-            let name = String::from(&cap[1]);
-            let weight = cap[2].parse::<u32>().unwrap();
-            (name, weight)
-        })
-        .nth(0).unwrap()
-}
 
-fn parse_tail(s: &str) -> Vec<String> {
-    s.split(", ")
-        .map(|w| { String::from(w) })
-        .collect::<Vec<_>>()
-}
+named!(head<(String, u32)>,
+    do_parse!(
+        l: label >> space >> w: weight >>
+        (l, w)
+    ));
+
+named!(tail<Vec<String>>,
+    separated_nonempty_list_complete!(tag!(", "), label));
+
+named!(label<String>,
+    flat_map!(call!(alpha), parse_to!(String)));
+
+named!(weight<u32>,
+    delimited!(tag!("("), num, tag!(")")));
+
+named!(num<u32>,
+    flat_map!(call!(digit), parse_to!(u32)));
