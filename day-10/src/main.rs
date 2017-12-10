@@ -21,12 +21,8 @@ struct Ring {
 
 impl Ring {
     fn new (size: i32) -> Ring {
-        let mut data = Vec::new();
         let suffix = vec![17, 31, 73, 47, 23];
-
-        for i in 0..size {
-            data.push(i as u8);
-        }
+        let data = (0..size).map(|i| i as u8).collect::<Vec<u8>>();
         Ring { data, suffix }
     }
     fn len(&self) -> usize {
@@ -48,47 +44,38 @@ impl Ring {
             self.swap(src_i, dest_i);
         }
     }
-    fn run_twists(&mut self, xs: &[u8]) {
+    fn hash_rounds(&mut self, rounds: usize, xs: &[u8]) {
         let mut index = 0;
         let mut skip = 0;
-        for length in xs.iter() {
-            let length = *length as i32;
-            self.twist(index, length);
-            index += length + skip;
-            skip += 1;
-        }
-    }
-    fn head_factor(&self) -> i32 {
-        self.get(0) as i32 * self.get(1) as i32
-    }
-    // part 2
-    fn hash_str(&mut self, s: &str) {
-        let mut index = 0;
-        let mut skip = 0;
-        let mut items = String::from(s).into_bytes();
-        items.extend(self.suffix.to_vec());
 
-        for _round in 0..64 {
-            for length in items.iter() {
+        for _round in 0..rounds {
+            for length in xs.iter() {
                 let length = *length as i32;
                 self.twist(index, length);
                 index += length + skip;
                 skip += 1;
             }
         }
-
-
+    }
+    fn run_twists(&mut self, xs: &[u8]) {
+        self.hash_rounds(1, xs);
+    }
+    fn head_factor(&self) -> i32 {
+        self.get(0) as i32 * self.get(1) as i32
+    }
+    // part 2
+    fn hash_str(&mut self, s: &str) {
+        let mut xs = String::from(s).into_bytes();
+        xs.extend(self.suffix.to_vec());
+        self.hash_rounds(64, &xs);
     }
     fn dense_hash(&self) -> Vec<u8> {
-        let mut hash = Vec::new();
-        for page in 0..self.len() / 16 {
-            let mut acc: u8 = 0;
-            for i in 0..16 {
-                acc ^= self.get((page * 16 + i) as i32);
-            }
-            hash.push(acc);
-        }
-        hash
+        let page_size = 16;
+        (0..&self.len() / page_size).map(|page| {
+            (0..page_size).fold(0, |acc, i| {
+                acc ^ self.get((page * page_size + i) as i32)
+            })
+        }).collect::<Vec<u8>>()
     }
 }
 
