@@ -1,0 +1,11 @@
+[[package]]
+name = "day-14"
+version = "0.1.0"
+dependencies = [
+ "knot_hash 0.1.0",
+]
+
+[[package]]
+name = "knot_hash"
+version = "0.1.0"
+
