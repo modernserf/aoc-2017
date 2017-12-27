@@ -6,11 +6,17 @@ fn main() {
     let contents = include_str!("input.txt");
     let pattern_matcher = PatternMatcher::from_string(&contents);
 
-    let result = (0..5).fold(init, |state, _| {
+    let result = (0..5).fold(init.copy(), |state, _| {
         pattern_matcher.grow(&state)
     });
 
     println!("part 1: {}", result.checksum());
+
+    let result = (0..18).fold(init.copy(), |state, _| {
+        pattern_matcher.grow(&state)
+    });
+
+    println!("part 2: {}", result.checksum());
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
@@ -99,7 +105,7 @@ impl Pattern {
                 for y in 0..next_size {
                     for x in 0..next_size {
                         let val = self.get(
-                            x + (next_size * i), y + (next_size * j));
+                            x + (next_size * j), y + (next_size * i));
                         p.set(x, y, val);
                     }
                 }
@@ -175,8 +181,8 @@ impl PatternMatcher {
 }
 
 fn sqrt (x: usize) -> usize {
-    for i in 0..10 {
+    for i in 0..1000 {
         if (i * i) == x { return i }
     }
-    panic!("no integer sqrt in range");
+    panic!("no integer sqrt in range {}", x);
 }
